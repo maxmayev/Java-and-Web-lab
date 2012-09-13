@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:jsp="http://java.sun.com/JSP/Page" xmlns:page="urn:jsptagdir:/WEB-INF/tags/form" xmlns:table="urn:jsptagdir:/WEB-INF/tags/form/fields" version="2.0">
+    <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+    <jsp:output omit-xml-declaration="yes"/>
+    <page:list id="pl_com_java_styles_app_domain_ObjectPropertyCatalog" items="${objectpropertycatalogs}" z="LkgigVke4DjhrThAypZUPpVH8T0=">
+        <table:table data="${objectpropertycatalogs}" id="l_com_java_styles_app_domain_ObjectPropertyCatalog" path="/objectpropertycatalogs" z="bUqyw+VFMcmBfjhbPrwEpQfBzks=">
+            <table:column id="c_com_java_styles_app_domain_ObjectPropertyCatalog_name" property="name" z="JEguNBjzsJx/wYznnP8ne0l4SQ4="/>
+            <table:column id="c_com_java_styles_app_domain_ObjectPropertyCatalog_styleClasses" property="styleClasses" z="kECT7+XmazwMPw0dj8fogf2Nm80="/>
+        </table:table>
+    </page:list>
+</div>

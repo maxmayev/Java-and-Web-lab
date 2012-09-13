@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<div xmlns:field="urn:jsptagdir:/WEB-INF/tags/form/fields" xmlns:form="urn:jsptagdir:/WEB-INF/tags/form" xmlns:jsp="http://java.sun.com/JSP/Page" version="2.0">
+    <jsp:directive.page contentType="text/html;charset=UTF-8"/>
+    <jsp:output omit-xml-declaration="yes"/>
+    <form:update id="fu_com_java_styles_app_domain_ObjectPropertyCatalog" modelAttribute="objectPropertyCatalog" path="/objectpropertycatalogs" versionField="Version" z="1acK4vgmDsaXDTiwDEzrUZVZLHc=">
+        <field:input field="name" id="c_com_java_styles_app_domain_ObjectPropertyCatalog_name" min="2" required="true" z="cHGsAtsfgh9BJkA+vU/w1BuQTgc="/>
+        <field:select field="styleClasses" id="c_com_java_styles_app_domain_ObjectPropertyCatalog_styleClasses" itemValue="id" items="${styleclasses}" multiple="true" path="/styleclasses" z="7xOIYe+JhW6FpTpAa+eHPoqbETQ="/>
+    </form:update>
+</div>
