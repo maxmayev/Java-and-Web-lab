@@ -1,0 +1,19 @@
+// Spring Roo 1.2.1.RELEASE [rev 6eae723] log opened at 2012-08-25 08:22:19
+project --topLevelPackage com.java.styles.app
+jpa setup --provider HIBERNATE --database HYPERSONIC_IN_MEMORY 
+      entity jpa --class ~.domain.Family --testAutomatically  
+                        field string --fieldName name --notNull --sizeMin 2
+entity jpa --class ~.domain.Style --testAutomatically 
+field string --fieldName name --notNull --sizeMin 2
+entity jpa --class ~.domain.StyleClass --testAutomatically 
+field string --fieldName name --notNull --sizeMin 2
+field set --fieldName styles --type ~.domain.Style
+focus --class ~.domain.Style 
+field reference --fieldName family --type ~.domain.Family 
+entity jpa --class ~.domain.ObjectPropertyCatalog --testAutomatically
+field string --fieldName name --notNull --sizeMin 2
+field set --fieldName styleClasses --type ~.domain.StyleClass 
+web mvc setup
+web mvc all --package ~.web
+focus --class ~.domain.Style 
+field reference --fieldName familyOfStyle --type ~.domain.Family 
