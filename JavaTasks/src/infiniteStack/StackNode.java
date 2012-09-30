@@ -1,21 +1,27 @@
 package infiniteStack;
 
+import com.sun.istack.internal.Nullable;
 
-public class StackNode {
-    private String value;
+
+public class StackNode<T> {
+
+    private T value;
+
+    @Nullable
     private StackNode bottomNode;
 
-    public StackNode(String value){
+    public StackNode(T value){
         this.value = value;
     }
 
-    public String getValue() {
+    public T getValue() {
         return value;
     }
 
-    public void setValue(String value) {
+    public void setValue(T value) {
         this.value = value;
     }
+
 
     public StackNode getBottomNode(){
         return bottomNode;
