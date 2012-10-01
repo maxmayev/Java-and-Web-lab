@@ -1,146 +1,132 @@
 package chat;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.Socket;
 
-/**
- * Класс-клиент чат-сервера. Работает в консоли. Командой с консоли shutdown посылаем сервер в оффлайн
- */
-public class ChatClient {
-    final Socket s;  // это будет сокет для сервера
-    final BufferedReader socketReader; // буферизированный читатель с сервера
-    final BufferedWriter socketWriter; // буферизированный писатель на сервер
-    final BufferedReader userInput; // буферизированный читатель пользовательского ввода с консоли
-    private JTextField tf;
-    private JTextPane jTextPane;
-    /**
-     * Конструктор объекта клиента
-     * @param host - IP адрес или localhost или доменное имя
-     * @param port - порт, на котором висит сервер
-     * @throws java.io.IOException - если не смогли приконнектиться, кидается исключение, чтобы
-     * предотвратить создание объекта
-     */
-    public ChatClient(String host, int port) throws IOException {
-        s = new Socket(host, port); // создаем сокет
-        // создаем читателя и писателя в сокет с дефолной кодировкой UTF-8
-        socketReader = new BufferedReader(new InputStreamReader(s.getInputStream(), "UTF-8"));
-        socketWriter = new BufferedWriter(new OutputStreamWriter(s.getOutputStream(), "UTF-8"));
-        // создаем читателя с консоли (от пользователя)
-        userInput = new BufferedReader(new InputStreamReader(System.in));
-        new Thread(new Receiver()).start();// создаем и запускаем нить асинхронного чтения из сокета
-    }
 
-    /**
-     * метод, где происходит главный цикл чтения сообщений с консоли и отправки на сервер
-     */
-    public void run() {
-        //Creating the Frame
-        JFrame frame = new JFrame("Chat Frame");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(400,400);
-        //Creating the MenuBar and adding components
-        jTextPane = new JTextPane();
+public class ChatClientForm {
+    final Socket socket;
+    final BufferedReader socketReader;
+    final BufferedWriter socketWriter;
 
+    private String userName;
 
+    private JTextPane outputTextPane;
+    private JList userList;
+    private JButton sendButton;
+    private JButton exitButton;
+    private JTextField inputTextField;
+    private JPanel panel;
 
-        //Creating the panel at bottom and adding components
-        JPanel panel = new JPanel(); // the panel is not visible in output
-        panel.setBackground(Color.blue);
-        JLabel label = new JLabel("Enter Text");
-        tf = new JTextField(10);// accepts upto 10 characters
-        JButton send = new JButton("Send");
-        JButton exit = new JButton("Exit");
-        panel.add(label);// Components Added using Flow Layout
-        panel.add(tf);
-        panel.add(send);
-        panel.add(exit);
-        panel.add(jTextPane);
-        // Text Area at the Center
-        JTextArea ta = new JTextArea();
-        //Adding Components to the frame.
-        frame.getContentPane().add(BorderLayout.SOUTH,panel);
-        frame.getContentPane().add(BorderLayout.NORTH,jTextPane);
-        frame.getContentPane().add(BorderLayout.CENTER,ta);
+    private JFrame frame = new JFrame();
+
+    public ChatClientForm(String host, int port) throws IOException {
+        socket = new Socket(host, port);
+        socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+        socketWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
+        new Thread(new Receiver()).start();
+
+        frame.add(panel);
+        frame.setSize(500, 400);
         frame.setVisible(true);
 
-        send.addActionListener(new ActionListener() {
+        userName = JOptionPane.showInputDialog(frame, "Введите имя пользователя", "Ввод имени пользователя", 1);
+        frame.setTitle("Клиент чата : " + userName);
+
+
+        try {
+            socketWriter.write(ChatCommand.LOGIN.getName() + userName + "\n");
+            socketWriter.flush();
+        } catch (IOException e1) {
+            e1.printStackTrace();
+        }
+
+    }
+
+
+    public void run() {
+
+        sendButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    socketWriter.write(tf.getText()); //пишем строку пользователя
-                    socketWriter.write("\n"); //добавляем "новою строку", дабы readLine() сервера сработал
-                    socketWriter.flush(); // отправляем
+                    socketWriter.write(ChatCommand.MESSAGE.getName()+ " " +
+                            userName + " " +
+                            inputTextField.getText() + "\n");
+                    socketWriter.flush();
                 } catch (IOException e1) {
-                    e1.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                    e1.printStackTrace();
                 }
 
             }
         });
 
-        exit.addActionListener(new ActionListener() {
+        exitButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                close(); // в любой ошибке - закрываем.
+                close();
             }
         });
     }
 
-    /**
-     * метод закрывает коннект и выходит из
-     * программы (это единственный  выход прервать работу BufferedReader.readLine(), на ожидании пользователя)
-     */
-    public synchronized void close() {//метод синхронизирован, чтобы исключить двойное закрытие.
-        if (!s.isClosed()) { // проверяем, что сокет не закрыт...
+
+    public synchronized void close() {
+        if (!socket.isClosed()) {
             try {
-                s.close(); // закрываем...
-                System.exit(0); // выходим!
-            } catch (IOException ignored) {
-                ignored.printStackTrace();
+                socketWriter.write(ChatCommand.LOGOUT.getName() + userName + "\n");
+                socketWriter.flush();
+                socket.close();
+                System.exit(0);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }
 
     public static void main(String[] args)  {
         try {
-            new ChatClient("localhost", 45000).run();
+            new ChatClientForm("localhost", 45000).run();
         } catch (IOException e) {
-            System.out.println("Unable to connect. Server not running?");
+            System.out.println("Не удалось подключится к серверу");
         }
     }
 
-    /**
-     * Вложенный приватный класс асинхронного чтения
-     */
-    private class Receiver implements Runnable{
 
+    private class Receiver implements Runnable{
         public void run() {
-            //проверяем коннект
-            while (!s.isClosed()) {
+            while (!socket.isClosed()) {
                 String line = null;
                 try {
-                    // пробуем прочесть
                     line = socketReader.readLine();
                 } catch (IOException e) {
                     if ("Socket closed".equals(e.getMessage())) {
                         break;
                     }
-                    System.out.println("Connection lost");
-                    // закрываем сокет
+                    System.out.println("Соединение потеряно");
                     close();
                 }
-                if (line == null) {  // строка будет null если сервер прикрыл коннект по своей инициативе, сеть работает
-                    System.out.println("Server has closed connection");
-                    close(); // ...закрываемся
-                } else { // иначе печатаем то, что прислал сервер.
-                    jTextPane.setText(jTextPane.getText()+line+"\n");
+                if (line != null) {
+                    if (line.startsWith(ChatCommand.USER_LIST.getName())){
+                        String toSplit = line.substring("userList:[".length(), line.length()-1);
+                        String[] tokens = toSplit.split(", ");
+                        userList.setListData(tokens);
+                    }else if (line.startsWith(ChatCommand.MESSAGE.getName())){
+                        outputTextPane.setText(outputTextPane.getText()+
+                                line.substring(ChatCommand.MESSAGE.getName().length())+
+                                "\n");
+                    }
+                } else {
+                    System.out.println("Сервер закрыл соединение");
+                    close();
                 }
             }
         }
     }
+
+
+
+
 }
-
-
