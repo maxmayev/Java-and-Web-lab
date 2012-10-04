@@ -111,7 +111,6 @@ public class ChatServer {
                     }
                 } else if (line.startsWith(ChatCommand.MESSAGE.getName())) {
 
-//                    String stringToSend = line.substring(ChatCommand.MESSAGE.getName().length());
                     for (SocketProcessor sp: queue) {
                         sp.send(line);
                     }
