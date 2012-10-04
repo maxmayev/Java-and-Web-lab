@@ -1,43 +1,26 @@
-package cheese;
+package cheeseStore;
 
+import java.util.Comparator;
+import java.util.concurrent.PriorityBlockingQueue;
 
 public class Main {
+    public static void main(String[] args) {
+        PriorityBlockingQueue<CheeseOrder> queue =
+                new PriorityBlockingQueue<CheeseOrder>(4,
+                        new Comparator<CheeseOrder>() {
+                            @Override
+                            public int compare(CheeseOrder o1, CheeseOrder o2) {
+                                return o1.compareTo(o2);
+                            }
+                        });
 
-    static CheeseStore cheeseStore = new CheeseStore();
 
-    public static void main(String[] args){
+        Thread a = new Thread(new Producer(queue));
+        Thread b = new Thread(new Consumer(queue));
+        a.start();
+        b.start();
 
-        CustomerRunnable customerRunnable = new CustomerRunnable();
-        customerRunnable.setCheeseStore(cheeseStore);
-        customerRunnable.setName("greedy 1");
-
-        CustomerRunnable customerRunnable2 = new CustomerRunnable();
-        customerRunnable2.setCheeseStore(cheeseStore);
-        customerRunnable2.setName("greedy 2");
-
-        CustomerRunnable customerRunnable3 = new CustomerRunnable();
-        customerRunnable3.setCheeseStore(cheeseStore);
-        customerRunnable3.setName("reg 3");
-
-        CustomerRunnable customerRunnable4 = new CustomerRunnable();
-        customerRunnable4.setCheeseStore(cheeseStore);
-        customerRunnable4.setName("reg 4");
-
-        Thread greedyThread = new Thread(customerRunnable);
-        greedyThread.setPriority(10);
-        Thread greedyThread2 = new Thread(customerRunnable2);
-        greedyThread2.setPriority(10);
-
-        Thread regularThread = new Thread(customerRunnable3);
-        regularThread.setPriority(2);
-
-        Thread regularThread2 = new Thread(customerRunnable4);
-        regularThread2.setPriority(2);
-
-        greedyThread.start();
-        greedyThread2.start();
-        regularThread.start();
-        regularThread2.start();
 
     }
+
 }
