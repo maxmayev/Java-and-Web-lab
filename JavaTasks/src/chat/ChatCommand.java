@@ -6,7 +6,7 @@ public enum ChatCommand {
     LOGOUT("logOut:"),
     MESSAGE("message:"),
     USER_LIST("userList:"),
-    SHUTDOWN("shutdown"); //shutdown сейчас не используется
+    SHUTDOWN("shutdown"); 
 
     ChatCommand(String name){
         this.name = name;
