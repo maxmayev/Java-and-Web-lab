@@ -1,30 +1,25 @@
-package cheese;
+package cheeseStore;
 
-class CustomerRunnable implements Runnable {
+import java.util.Date;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 
-    CheeseStore cheeseStore;
+public class Consumer implements Runnable {
+    private BlockingQueue<CheeseOrder> queue;
 
-    public void setName(String name) {
-        this.name = name;
+    public Consumer(BlockingQueue<CheeseOrder> queue) {
+        this.queue = queue;
     }
 
-    String name;
-
-    public void setCheeseStore(CheeseStore cheeseStore) {
-        this.cheeseStore = cheeseStore;
-    }
-
-    @Override
     public void run() {
-        while (true) {
-
-            cheeseStore.getCheese(name);
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        try {
+            while (true) {
+                CheeseOrder cheeseOrder = queue.take();
+                Thread.sleep(50);
+                System.out.println(new Date() + " take");
             }
+        } catch (InterruptedException e) {
+            System.out.println(e);
         }
     }
 }
-
