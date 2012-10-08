@@ -14,7 +14,7 @@ public enum ChatCommand {
 
     private String name;
 
-    public String getName(){
+    public synchronized String getName(){
         return name;
     }
 
