@@ -5,17 +5,17 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-
 
 public class ChatServer {
     private ServerSocket serverSocket;
     private Thread serverThread;
     private int port;
 
-    List<String> activeUserList = new ArrayList<String>();
+    List<String> activeUserList = Collections.synchronizedList(new ArrayList<String>());
 
     BlockingQueue<SocketProcessor> queue = new LinkedBlockingQueue<SocketProcessor>();
 
@@ -35,17 +35,16 @@ public class ChatServer {
                 shutdownServer();
             }
 
-            if (serverThread.isInterrupted()){
+            if (serverThread.isInterrupted()) {
                 break;
-            } else if (socket != null){
+            } else if (socket != null) {
                 try {
                     final SocketProcessor processor = new SocketProcessor(socket);
                     final Thread thread = new Thread(processor);
                     thread.setDaemon(true);
                     thread.start();
                     queue.offer(processor);
-                }
-                catch (IOException ignored) {
+                } catch (IOException ignored) {
 
                 }
             }
@@ -53,12 +52,13 @@ public class ChatServer {
     }
 
 
+
     public static void main(String[] args) throws IOException {
         new ChatServer(45000).run();
     }
 
-
-    private class SocketProcessor implements Runnable{
+ 
+    private class SocketProcessor implements Runnable {
         Socket socket;
         BufferedReader br;
         BufferedWriter bw;
@@ -66,7 +66,7 @@ public class ChatServer {
         SocketProcessor(Socket s) throws IOException {
             socket = s;
             br = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-            bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8") );
+            bw = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
         }
 
         public void run() {
@@ -91,28 +91,34 @@ public class ChatServer {
                         shutdownServer();
                     }
 
-                } else if (line.startsWith(ChatCommand.LOGIN.getName())){
-                    activeUserList.add(line.substring(ChatCommand.LOGIN.getName().length()));
+                } else if (line.startsWith(ChatCommand.LOGIN.getName())) {
+                    synchronized (this) {
+                        activeUserList.add(line.substring(ChatCommand.LOGIN.getName().length()));
 
-                    String newUserList = ChatCommand.USER_LIST.getName() +
-                            Arrays.toString(activeUserList.toArray());
+                        String newUserList = ChatCommand.USER_LIST.getName() +
+                                Arrays.toString(activeUserList.toArray());
 
-                    for (SocketProcessor sp : queue){
-                        sp.send(newUserList);
+                        for (SocketProcessor sp : queue) {
+                            sp.send(newUserList);
+                        }
                     }
 
-                } else if (line.startsWith(ChatCommand.LOGOUT.getName())){
-                    activeUserList.remove(line.substring(ChatCommand.LOGOUT.getName().length()));
+                } else if (line.startsWith(ChatCommand.LOGOUT.getName())) {
+                    synchronized (this) {
+                        activeUserList.remove(line.substring(ChatCommand.LOGOUT.getName().length()));
 
-                    String newUserList = ChatCommand.USER_LIST.getName() + Arrays.toString(activeUserList.toArray());
+                        String newUserList = ChatCommand.USER_LIST.getName() + Arrays.toString(activeUserList.toArray());
 
-                    for (SocketProcessor sp : queue){
-                        sp.send(newUserList);
+                        for (SocketProcessor sp : queue) {
+                            sp.send(newUserList);
+                        }
                     }
                 } else if (line.startsWith(ChatCommand.MESSAGE.getName())) {
+                    synchronized (this) {
 
-                    for (SocketProcessor sp: queue) {
-                        sp.send(line);
+                        for (SocketProcessor sp : queue) {
+                            sp.send(line);
+                        }
                     }
                 }
             }
@@ -127,6 +133,7 @@ public class ChatServer {
                 close();
             }
         }
+
 
         public synchronized void close() {
             queue.remove(this);
@@ -147,13 +154,14 @@ public class ChatServer {
     }
 }
 
-private synchronized void shutdownServer() {
-        for (SocketProcessor s: queue) {
+    private synchronized void shutdownServer() {
+        for (SocketProcessor s : queue) {
             s.close();
         }
         if (!serverSocket.isClosed()) {
             try {
                 serverSocket.close();
-            } catch (IOException ignored) {}
+            } catch (IOException ignored) {
+            }
         }
     }
